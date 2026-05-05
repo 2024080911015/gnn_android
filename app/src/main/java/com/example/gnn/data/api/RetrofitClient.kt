@@ -8,6 +8,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
+    // 本地测试：改成 "http://10.0.2.2:5001/" (Android 模拟器)
+    // 生产环境：保持 "https://gnn.ourforever.org/"
     private const val BASE_URL = "https://gnn.ourforever.org/"
 
     private val cookieJar = object : CookieJar {

@@ -68,7 +68,7 @@ data class SocialReportStatus(
 
 data class CommunityDistribution(
     val name: String,
-    val percent: Int,
+    val percent: String,
     val count: Int
 )
 

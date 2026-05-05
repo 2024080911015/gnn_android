@@ -54,9 +54,15 @@ fun LoginScreen(
             username = username,
             password = password,
             onDismiss = { showRegisterDetails = false },
-            onSuccess = { name, id ->
+            onRegisterSuccess = { name, id ->
                 showRegisterDetails = false
+                isLoginTab = true  // 切回登录 tab，方便用户手动登录
                 onLoginSuccess(name, id)
+            },
+            onSwitchToLogin = { msg ->
+                showRegisterDetails = false
+                isLoginTab = true
+                errorMessage = msg  // 提示用户注册成功，请登录
             }
         )
     }
@@ -238,7 +244,8 @@ fun RegisterDetailsDialog(
     username: String,
     password: String,
     onDismiss: () -> Unit,
-    onSuccess: (String, Int) -> Unit
+    onRegisterSuccess: (String, Int) -> Unit,
+    onSwitchToLogin: (String) -> Unit = {}
 ) {
     var gender by remember { mutableStateOf("男") }
     var grade by remember { mutableStateOf("大一") }
@@ -308,16 +315,25 @@ fun RegisterDetailsDialog(
                                 )
                                 val response = RetrofitClient.instance.register(request)
                                 if (response.isSuccessful && response.body()?.status == "success") {
-                                    // Registration success, now login
+                                    // 注册成功，自动登录
                                     val loginRes = RetrofitClient.instance.login(LoginRequest(username, password))
                                     if (loginRes.isSuccessful && loginRes.body()?.status == "success") {
                                         val data = loginRes.body()?.data
-                                        if (data != null) onSuccess(data.username, data.uid)
+                                        if (data != null) {
+                                            onRegisterSuccess(data.username, data.uid)
+                                        } else {
+                                            onSwitchToLogin("注册成功，请点击「Log in」手动登录")
+                                        }
                                     } else {
-                                        onDismiss() // Go back to login
+                                        onSwitchToLogin("注册成功，请点击「Log in」手动登录")
                                     }
                                 } else {
-                                    errorMessage = response.body()?.message ?: "注册失败"
+                                    // 显示服务端返回的具体错误，避免 generic 掩盖真实问题
+                                    val serverMsg = response.body()?.message
+                                    val errorBody = response.errorBody()?.string()
+                                    errorMessage = serverMsg
+                                        ?: if (errorBody != null) "服务器错误(${response.code()}): ${errorBody.take(100)}"
+                                        else "注册失败 (HTTP ${response.code()})"
                                 }
                             } catch (e: Exception) {
                                 errorMessage = "网络错误"

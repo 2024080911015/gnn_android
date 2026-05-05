@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,9 +19,9 @@ import com.example.gnn.ui.dashboard.DashboardViewModel
 
 @Composable
 fun RelationsPanel(viewModel: DashboardViewModel) {
-    LaunchedEffect(Unit) {
-        viewModel.loadSocialData()
-    }
+    // 不在此处调用 loadSocialData()，避免多 worker 场景下
+    // 服务端返回陈旧数据覆盖本地乐观更新。
+    // 数据由 init() 初始加载，由 toggleFollow() 保持实时同步。
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text("🤝 关系管理", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
