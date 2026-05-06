@@ -33,11 +33,18 @@ interface ApiService {
     @GET("user")
     suspend fun getUser(@Query("id") uid: Int): Response<UserDetailResponse>
 
+    @GET("api/users/avatars")
+    suspend fun getUserAvatars(): Response<UserAvatarsResponse>
+
     @GET("api/search_users")
     suspend fun searchUsers(@Query("q") query: String): Response<UserSearchResponse>
 
     @POST("api/user/update")
     suspend fun updateProfile(@Body data: Map<String, String?>): Response<GenericResponse>
+
+    @Multipart
+    @POST("api/user/upload_avatar")
+    suspend fun uploadAvatar(@Part avatar: okhttp3.MultipartBody.Part): Response<GenericResponse>
 
     // Social
     @GET("following")

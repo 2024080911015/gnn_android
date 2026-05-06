@@ -1,6 +1,7 @@
 package com.example.gnn.ui.dashboard.panels
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,9 +22,16 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.LocalImageLoader
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.example.gnn.data.api.RetrofitClient
 import com.example.gnn.ui.dashboard.DashboardViewModel
 
 @Composable
@@ -33,6 +41,7 @@ fun RecommendPanel(viewModel: DashboardViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadRecommendations()
         viewModel.loadCommunities()
+        viewModel.loadAvatars()
     }
 
     LazyColumn(
@@ -51,11 +60,32 @@ fun RecommendPanel(viewModel: DashboardViewModel) {
                     .padding(24.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    val currentAvatarUrl = viewModel.userDetail?.avatar?.let {
+                        "${RetrofitClient.BASE_URL}static/avatars/$it?t=${viewModel.avatarVersion}"
+                    }
                     Box(
-                        modifier = Modifier.size(64.dp).background(Color.White.copy(alpha = 0.1f), CircleShape),
+                        modifier = Modifier.size(64.dp).clip(CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(viewModel.currentUsername.firstOrNull()?.toString() ?: "?", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                        val bannerLetter = viewModel.currentUsername.firstOrNull()?.toString() ?: "?"
+                        val bannerPainter = currentAvatarUrl?.let { url ->
+                            rememberAsyncImagePainter(model = url, imageLoader = LocalImageLoader.current)
+                        }
+                        when {
+                            bannerPainter != null && bannerPainter.state is AsyncImagePainter.State.Success -> {
+                                Image(
+                                    painter = bannerPainter,
+                                    contentDescription = "头像",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                            else -> {
+                                Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.1f), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text(bannerLetter, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
@@ -213,8 +243,27 @@ fun RecommendPanel(viewModel: DashboardViewModel) {
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(40.dp).background(Color(0xFFFDE68A), CircleShape), contentAlignment = Alignment.Center) {
-                        Text(user.username.firstOrNull()?.toString() ?: "?", color = Color(0xFFB45309), fontWeight = FontWeight.Bold)
+                    // Try avatars map first (correct extension), fallback to direct .jpg URL
+                    val avatarUrl = remember(user.id, viewModel.userAvatars) {
+                        val fromMap = viewModel.userAvatars[user.id.toString()]
+                        if (fromMap != null) {
+                            "${RetrofitClient.BASE_URL}static/avatars/$fromMap"
+                        } else {
+                            "${RetrofitClient.BASE_URL}static/avatars/${user.id}_avatar.jpg"
+                        }
+                    }
+                    Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                        SubcomposeAsyncImage(
+                            model = avatarUrl,
+                            contentDescription = "头像",
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                            error = {
+                                Box(Modifier.fillMaxSize().background(Color(0xFFFDE68A), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text(user.username.firstOrNull()?.toString() ?: "?", color = Color(0xFFB45309), fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {

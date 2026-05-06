@@ -17,10 +17,12 @@ class DashboardViewModel : ViewModel() {
 
     // Profile State
     var userDetail by mutableStateOf<UserDetailResponse?>(null)
+    var avatarVersion by mutableStateOf(0L)  // 用于上传后刷新 Coil 缓存
     
     // Recommendations State
     var recommendations by mutableStateOf<List<RecommendedUser>>(emptyList())
     var socialReport by mutableStateOf<SocialReportResponse?>(null)
+    var userAvatars by mutableStateOf<Map<String, String>>(emptyMap())
     var communities by mutableStateOf<List<String>>(emptyList())
     var selectedCommunity by mutableStateOf("")
     var selectedMode by mutableStateOf("social")
@@ -51,8 +53,9 @@ class DashboardViewModel : ViewModel() {
         currentUid = uid
         currentUsername = username
         refreshProfile()
-        loadSocialData() 
+        loadSocialData()
         loadRecommendations()
+        loadAvatars()
     }
 
     fun isFollowing(targetId: Int): Boolean {
@@ -126,6 +129,8 @@ class DashboardViewModel : ViewModel() {
                 android.util.Log.e("GNN", "loadRecommendations 异常", e)
             }
         }
+        // 同时刷新头像映射表
+        loadAvatars()
     }
 
     fun loadCommunities() {
@@ -134,6 +139,17 @@ class DashboardViewModel : ViewModel() {
                 val response = api.getCommunity()
                 if (response.isSuccessful) {
                     communities = response.body()?.communities ?: emptyList()
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    fun loadAvatars() {
+        viewModelScope.launch {
+            try {
+                val response = api.getUserAvatars()
+                if (response.isSuccessful) {
+                    userAvatars = response.body()?.avatars ?: emptyMap()
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }

@@ -87,6 +87,12 @@ data class UserSearchResponse(
     val results: List<RecommendedUser>
 )
 
+// User Avatars
+data class UserAvatarsResponse(
+    val status: String,
+    val avatars: Map<String, String>
+)
+
 // Social
 data class FollowListResponse(
     val student_id: Int,

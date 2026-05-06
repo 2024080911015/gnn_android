@@ -1,5 +1,6 @@
 package com.example.gnn.ui.dashboard.panels
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -8,11 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
 import com.example.gnn.data.api.RetrofitClient
 import com.example.gnn.data.model.UserDetailResponse
 import kotlinx.coroutines.launch
@@ -41,11 +46,26 @@ fun UserDetailDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Avatar
+                val avatarUrl = user.avatar?.let { "${RetrofitClient.BASE_URL}static/avatars/$it" }
                 Box(
-                    modifier = Modifier.size(80.dp).background(Color(0xFFFEF3C7), CircleShape),
+                    modifier = Modifier.size(80.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(user.username.firstOrNull()?.toString() ?: "?", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                    if (avatarUrl != null) {
+                        AsyncImage(
+                            model = avatarUrl,
+                            contentDescription = "头像",
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color(0xFFFEF3C7), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(user.username.firstOrNull()?.toString() ?: "?", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                        }
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))

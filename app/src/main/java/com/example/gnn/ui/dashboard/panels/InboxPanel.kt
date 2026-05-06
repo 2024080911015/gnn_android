@@ -9,18 +9,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
+import com.example.gnn.data.api.RetrofitClient
 import com.example.gnn.ui.dashboard.DashboardViewModel
 
 @Composable
 fun InboxPanel(viewModel: DashboardViewModel) {
     LaunchedEffect(Unit) {
         viewModel.loadInbox()
+        viewModel.loadAvatars()
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -41,8 +47,27 @@ fun InboxPanel(viewModel: DashboardViewModel) {
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(modifier = Modifier.size(32.dp).background(Color(0xFFFEF3C7), CircleShape), contentAlignment = Alignment.Center) {
-                                    Text(msg.sender_name.firstOrNull()?.toString() ?: "?", color = Color(0xFFB45309), fontSize = 12.sp)
+                                // Use avatars map for correct filename, fallback to direct URL
+                                val inboxAvatarUrl = remember(msg.sender_id, viewModel.userAvatars) {
+                                    val fromMap = viewModel.userAvatars[msg.sender_id.toString()]
+                                    if (fromMap != null) {
+                                        "${RetrofitClient.BASE_URL}static/avatars/$fromMap"
+                                    } else {
+                                        "${RetrofitClient.BASE_URL}static/avatars/${msg.sender_id}_avatar.jpg"
+                                    }
+                                }
+                                Box(modifier = Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                                    SubcomposeAsyncImage(
+                                        model = inboxAvatarUrl,
+                                        contentDescription = "头像",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop,
+                                        error = {
+                                            Box(Modifier.fillMaxSize().background(Color(0xFFFEF3C7), CircleShape), contentAlignment = Alignment.Center) {
+                                                Text(msg.sender_name.firstOrNull()?.toString() ?: "?", color = Color(0xFFB45309), fontSize = 12.sp)
+                                            }
+                                        }
+                                    )
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {

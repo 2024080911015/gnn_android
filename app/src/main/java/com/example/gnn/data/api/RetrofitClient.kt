@@ -10,17 +10,17 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
     // 本地测试：改成 "http://10.0.2.2:5001/" (Android 模拟器)
     // 生产环境：保持 "https://gnn.ourforever.org/"
-    private const val BASE_URL = "https://gnn.ourforever.org/"
+    const val BASE_URL = "https://gnn.ourforever.org/"
 
     private val cookieJar = object : CookieJar {
         private val cookieStore = mutableMapOf<String, List<Cookie>>()
 
         override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-            cookieStore[url.host()] = cookies
+            cookieStore[url.host] = cookies
         }
 
         override fun loadForRequest(url: HttpUrl): List<Cookie> {
-            return cookieStore[url.host()] ?: listOf()
+            return cookieStore[url.host] ?: listOf()
         }
     }
 

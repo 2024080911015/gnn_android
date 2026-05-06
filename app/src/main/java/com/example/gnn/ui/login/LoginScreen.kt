@@ -32,6 +32,7 @@ import com.example.gnn.R
 import com.example.gnn.data.api.RetrofitClient
 import com.example.gnn.data.model.LoginRequest
 import com.example.gnn.data.model.RegisterRequest
+import com.example.gnn.ui.dashboard.panels.StarMapPanel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -46,6 +47,7 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var showRegisterDetails by remember { mutableStateOf(false) }
+    var showStarMap by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
@@ -68,36 +70,63 @@ fun LoginScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Background Image
-        Image(
-            painter = painterResource(id = R.drawable.login_bg),
-            contentDescription = "Background",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Gradient Overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF05050F).copy(alpha = 0.72f),
-                            Color(0xFF05050F).copy(alpha = 0.35f),
-                            Color.Transparent
-                        )
-                    )
+        if (showStarMap) {
+            // 全校星图全屏显示
+            Box(modifier = Modifier.fillMaxSize()) {
+                StarMapPanel()
+                // 顶部返回按钮
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Button(
+                        onClick = { showStarMap = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1E293B).copy(alpha = 0.8f),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("← 返回登录")
+                    }
+                }
+            }
+        } else {
+            // 登录页
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Background Image
+                Image(
+                    painter = painterResource(id = R.drawable.login_bg),
+                    contentDescription = "Background",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-        )
 
-        // Main Glass Card
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            contentAlignment = Alignment.Center
-        ) {
+                // Gradient Overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF05050F).copy(alpha = 0.72f),
+                                    Color(0xFF05050F).copy(alpha = 0.35f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+
+                // Main Glass Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -234,9 +263,22 @@ fun LoginScreen(
                         )
                     }
                 }
+                }  // end glass card Box
+                // 全校星图入口按钮
+                Text(
+                    text = "🌟 全校星图",
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 48.dp)
+                        .clickable { showStarMap = true }
+                )
             }
         }
     }
+}
 }
 
 @Composable

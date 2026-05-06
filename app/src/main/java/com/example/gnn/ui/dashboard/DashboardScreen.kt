@@ -12,10 +12,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.gnn.data.api.RetrofitClient
 import com.example.gnn.ui.dashboard.panels.*
 import kotlinx.coroutines.launch
 
@@ -32,6 +37,7 @@ fun DashboardScreen(
     val menuItems = listOf(
         MenuItem("✨", "推荐交友"),
         MenuItem("🌌", "我的社交星系"),
+        MenuItem("🌟", "全校星图"),
         MenuItem("🚩", "组队大厅"),
         MenuItem("🤝", "关系管理"),
         MenuItem("🔍", "找朋友"),
@@ -61,18 +67,34 @@ fun DashboardScreen(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Drawer avatar
+                    val drawerAvatarUrl = viewModel.userDetail?.avatar?.let {
+                        "${RetrofitClient.BASE_URL}static/avatars/$it?t=${viewModel.avatarVersion}"
+                    }
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color(0xFFFEF3C7), CircleShape),
+                        modifier = Modifier.size(48.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = viewModel.currentUsername.firstOrNull()?.toString() ?: "?",
-                            color = Color(0xFFB45309),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
+                        if (drawerAvatarUrl != null) {
+                            AsyncImage(
+                                model = drawerAvatarUrl,
+                                contentDescription = "头像",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier.fillMaxSize().background(Color(0xFFFEF3C7), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = viewModel.currentUsername.firstOrNull()?.toString() ?: "?",
+                                    color = Color(0xFFB45309),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp
+                                )
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
@@ -137,6 +159,7 @@ fun DashboardScreen(
                 when (selectedItem) {
                     "推荐交友" -> RecommendPanel(viewModel)
                     "我的社交星系" -> GraphPanel(viewModel.currentUid)
+                    "全校星图" -> StarMapPanel()
                     "组队大厅" -> ActivityPanel(viewModel)
                     "关系管理" -> RelationsPanel(viewModel)
                     "找朋友" -> SearchPanel(viewModel)
